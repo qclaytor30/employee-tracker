@@ -1,6 +1,14 @@
 {
+
   "dependencies": {
-    "inquirer": "^9.1.4",
-    "mysql": "^2.18.1"
+
+    "console-table-printer": "^2.11.1",
+
+    "inquirer": "^8.2.4",
+
+    "mysql": "^2.18.1",
+
+    "node": "^19.3.0"
+
   }
 }
