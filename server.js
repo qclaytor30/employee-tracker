@@ -1,5 +1,5 @@
-const mysql = require('mysql');
 const inquirer = require('inquirer');
+const mysql = require('mysql');
 const { printTable } = require('console-table-printer');
 const figlet = require('figlet');
 
@@ -8,11 +8,11 @@ let managers;
 let departments;
 let employees;
 
-var connection = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "Qsc7192000.",
-    database: 'employeeDb'
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'Qsc7192000.',
+    database: 'business_db'
 });
 
 figlet('Welcome to Employee Tracker', (err, result) => {
