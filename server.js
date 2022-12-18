@@ -1,9 +1,11 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
+const { start } = require('repl');
 
 let roles;
 let managers;
 let departments;
+let employees;
 
 var connection = mysql.createConnection({
     host: "localhost",
@@ -16,7 +18,7 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
     if (err) throw err;
     start();
-    getRoles(); getManagers(); getDepartments();
+    getRoles(); getManagers(); getDepartments(); getEmployees();
 })
 
 start = () => {
@@ -55,6 +57,12 @@ getManagers = () => {
     connection.query("SELECT id, first_name, last_name, CONCAT_WS(' ', first_name, last_name) AS managers FROM employee", function (err, res) {
         if (err) throw err;
         managers = res;
+    })
+};
+getEmployees = () => {
+    connection.query("SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee", function (err, res) {
+        if (err) throw err;
+        employees = res;
     })
 };
 addSomething = () => {
@@ -130,33 +138,56 @@ addRole = () => {
             if (err) throw err;
 
             console.log("1 new role now added: " + answer.title);
+            getRoles();
+            start();
         })
     })
 };
 
-function addEmployee() {
+addEmployee = () => {
+    let roleOptions = [];
+    for (i=0; i < roles.length; i++) {
+        roleOptions.push(object(roles[i]));
+    };
+    let managerOptions = [];
+    for (i = 0; i < managers.length; i++) {
+        managerOptions.push(Object(managers[i]));
+    }
     inquirer.prompt([
         {
-            name: "firstName",
+            name: "first_name",
             type: "input",
-            message: "What is the employee first name?"
+            message: "What is the employee's first name?"
         },
         {
-            name: "lastName",
+            name: "last_name",
             type: "input",
-            message: "What is the employee last name?"
+            message: "What is the employee's last name?"
         },
         {
             name: "role_id",
-            type: "input",
-            message: "What is the role (ID) of the employee?"
+            type: "list",
+            message: "What is the department of the positon?",
+            choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < roleOptions.length; i++) {
+                    choiceArray.push(roleOptions[i].title)
+                }
+                return choiceArray;
+            }
         },
         {
             name: "manager_id",
-            type: "input",
-            message: "What is the role (ID) of the employee?"
+            type: "list",
+            message: "Who is the manager of the employee?",
+            choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < managerOptions.length; i++) {
+                    choiceArray.push(managerOptions[i].managers)
+                }
+                return choiceArray;
         }
-
+    }
     ]).then(function (answer) {
         connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', '${answer.department_id}')`, function (err, res) {
             if (err) throw err;
