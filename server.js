@@ -26,8 +26,7 @@ connection.connect(function (err) {
 })
 
 start = () => {
-    inquirer
-    prompt({
+    inquirer.prompt({
             name: "choices",
             type: "list",
             message: "Which would you like to do?",
@@ -36,35 +35,46 @@ start = () => {
         .then(function (answer) {
             if (answer.choices === "ADD") {
                 addSomething(
-
                 )
-                console.log(answer.choices);
             }
             else if (answer.choices === "VIEW") {
-
+                viewSomething();
+            }
+            else if (answer.choices === "UPDATE") {
+                updateSomething();
+            }
+            else if (answer.choices === "DELETE") {
+                deleteSomething();
+            }
+            else if (answer.choices === "EXIT") {
+                console.log("Bye!");
+                connection.end();
+            }
+            else {
+                connection.end();
             }
         });
 }
 getRoles = () => {
-    connection.query("SELECT id, title FROM role", function (err, res) {
+    connection.query("SELECT id, title FROM role",(err, res) => {
         if (err) throw err;
         roles = res;
     })
 };
 getDepartments = () => {
-    connection.query("SELECT id, name FROM department", function (err, res) {
+    connection.query("SELECT id, name FROM department",(err, res) => {
         if (err) throw err;
         departments = res;
     })
 };
 getManagers = () => {
-    connection.query("SELECT id, first_name, last_name, CONCAT_WS(' ', first_name, last_name) AS managers FROM employee", function (err, res) {
+    connection.query("SELECT id, first_name, last_name, CONCAT_WS(' ', first_name, last_name) AS managers FROM employee",(err, res) => {
         if (err) throw err;
         managers = res;
     })
 };
 getEmployees = () => {
-    connection.query("SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee", function (err, res) {
+    connection.query("SELECT id, CONCAT_WS(' ', first_name, last_name) AS Employee_Name FROM employee",(err, res) => {
         if (err) throw err;
         employees = res;
     })
@@ -136,8 +146,7 @@ addRole = () => {
                 department_id = departmentOptions[i].id
             }
         }
-
-        connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', ${department_id})`, function (err, res) {
+        connection.query(`INSERT INTO role (title, salary, department_id) VALUES ('${answer.title}', '${answer.salary}', ${department_id})`,(err, res) => {
             if (err) throw err;
             console.log("1 new role now added: " + answer.title);
             getRoles();
@@ -149,7 +158,7 @@ addRole = () => {
 addEmployee = () => {
     let roleOptions = [];
     for (i=0; i < roles.length; i++) {
-        roleOptions.push(object(roles[i]));
+        roleOptions.push(Object(roles[i]));
     };
     let managerOptions = [];
     for (i = 0; i < managers.length; i++) {
@@ -239,7 +248,7 @@ viewSomething = () => {
 };
 
 viewDepartments = () => {
-    connection.query("SELECT * FROM department", function (err, res) {
+    connection.query("SELECT * FROM department",(err, res) => {
         if (err) throw err;
         printTable(res);
         start();
@@ -393,12 +402,140 @@ updateEmployeeManager = () => {
                     connection.query(`UPDATE employee SET manager_id = ${newChoice} WHERE id = ${employeeSelected}`), (err, res) => {
                         if (err) throw err;
                     };
-                    console.log("Manager Updated Succesfully");
+                    console.log("Manager Updated");
                 }
             }
             getEmployees();
             getManagers();
             start();
         })
+    })
+};
+deleteSomething = () => {
+    inquirer.prompt([
+        {
+            name: "delete",
+            type: "list",
+            message: "Select something to delete:",
+            choices: ["Delete department", "Delete role", "Delete employee", "EXIT"]
+        }
+    ]).then(answer => {
+        if (answer.delete === "Delete department") {
+            deleteDepartment();
+        }
+        else if (answer.delete === "Delete role") {
+            deleteRole();
+        }
+        else if (answer.delete === "Delete employee") {
+            deleteEmployee();
+        } else if (answer.delete === "EXIT") {
+            console.log("Bye!");
+
+            connection.end();
+        }
+        else {
+            connection.end();
+        }
+    })
+};
+
+deleteDepartment = () => {
+    let departmentOptions = [];
+    for (var i = 0; i < departments.length; i++) {
+        departmentOptions.push(Object(departments[i]));
+    }
+    inquirer.prompt([
+        {
+            name: "deleteDepartment",
+            type: "list",
+            message: "Select a department to delete",
+            choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < departmentOptions.length; i++) {
+                    choiceArray.push(departmentOptions[i])
+                }
+                return choiceArray;
+            }
+        }
+    ]).then(answer => {
+        for (i = 0; i < departmentOptions.length; i++) {
+            if (answer.deleteDepartment === departmentOptions[i].name) {
+                newChoice = departmentOptions[i].id
+                console.log(newChoice);
+                connection.query(`DELETE FROM department Where id = ${newChoice}`), (err, res) => {
+                    if (err) throw err;
+                };
+                console.log("Department: " + answer.deleteDepartment + " Deleted Succesfully");
+            }
+        }
+        getDepartments();
+        start();
+    })
+};
+
+deleteRole = () => {
+    let roleOptions = [];
+    for (var i = 0; i < roles.length; i++) {
+        roleOptions.push(Object(roles[i]));
+    }
+    inquirer.prompt([
+        {
+            name: "deleteRole",
+            type: "list",
+            message: "Select a role to delete",
+            choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < roleOptions.length; i++) {
+                    choiceArray.push(roleOptions[i].title)
+                }
+                return choiceArray;
+            }
+        }
+    ]).then(answer => {
+        for (i = 0; i < roleOptions.length; i++) {
+            if (answer.deleteRole === roleOptions[i].title) {
+                newChoice = roleOptions[i].id
+                console.log(newChoice);
+                connection.query(`DELETE FROM role Where id = ${newChoice}`), (err, res) => {
+                    if (err) throw err;
+                };
+                console.log("Role: " + answer.deleteRole + " Deleted Succesfully");
+            }
+        }
+        getRoles();
+        start();
+    })
+};
+
+deleteEmployee = () => {
+    let employeeOptions = [];
+    for (var i = 0; i < employees.length; i++) {
+        employeeOptions.push(Object(employees[i]));
+    }
+    inquirer.prompt([
+        {
+            name: "deleteEmployee",
+            type: "list",
+            message: "Select a employee to delete",
+            choices: function () {
+                var choiceArray = [];
+                for (var i = 0; i < employeeOptions.length; i++) {
+                    choiceArray.push(employeeOptions[i].Employee_Name)
+                }
+                return choiceArray;
+            }
+        }
+    ]).then(answer => {
+        for (i = 0; i < employeeOptions.length; i++) {
+            if (answer.deleteEmployee === employeeOptions[i].Employee_Name) {
+                newChoice = employeeOptions[i].id
+                connection.query(`DELETE FROM employee Where id = ${newChoice}`), (err, res) => {
+                    if (err) throw err;
+                };
+                console.log("Employee: " + answer.deleteEmployee + " Deleted Succesfully");
+            }
+        }
+        getEmployees();
+        start();
     })
 };
