@@ -8,12 +8,14 @@ let managers;
 let departments;
 let employees;
 
-const connection = mysql.createConnection({
+var connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'Qsc7192000.',
     database: 'business_db'
-});
+},
+    console.log(`Connected to the database.`)
+);
 
 figlet('Welcome to Employee Tracker', (err, result) => {
     console.log(err || result);
